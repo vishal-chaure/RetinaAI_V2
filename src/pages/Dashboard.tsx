@@ -37,7 +37,7 @@ const Dashboard = () => {
   const firstName = user?.user_metadata?.first_name || 'there';
 
   return (
-    <div className="min-h-screen pt-14">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pt-14">
       <WelcomeModal />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Welcome Section */}
@@ -74,7 +74,7 @@ const Dashboard = () => {
           transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
           className="mb-6 max-w-md mx-auto"
         >
-          <Card className="glass-morphism border-blue-500/20 hover:border-blue-400/30 transition-all duration-300">
+          <Card className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-500/20 hover:border-blue-400/30 transition-all duration-300">
             <CardHeader className="text-center pb-2">
               <motion.div
                 whileHover={{ scale: 1.1 }}
@@ -112,7 +112,7 @@ const Dashboard = () => {
           transition={{ duration: 0.6, delay: 0.6, ease: "easeOut" }}
           className="mb-6"
         >
-          <Card className="glass-morphism border-slate-700/50">
+          <Card className="bg-slate-800/50 border-slate-700/50">
             <CardHeader>
               <CardTitle className="text-lg text-slate-100 flex items-center">
                 <Info className="mr-2 h-5 w-5 text-blue-400" />
@@ -131,7 +131,7 @@ const Dashboard = () => {
                     <ArrowRight className="ml-1 h-3 w-3" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="glass-morphism border-slate-700 max-w-2xl">
+                <DialogContent className="bg-slate-800 border-slate-700 max-w-2xl">
                   <DialogHeader>
                     <DialogTitle className="text-lg text-slate-100">Understanding Diabetic Retinopathy</DialogTitle>
                     <DialogDescription className="text-slate-300 text-sm">
@@ -184,7 +184,7 @@ const Dashboard = () => {
                 transition={{ duration: 0.5, delay: 1 + index * 0.1, ease: "easeOut" }}
                 whileHover={{ y: -5 }}
               >
-                <Card className="glass-morphism border-slate-700/50 hover:border-blue-500/30 transition-all duration-300 group h-full">
+                <Card className="bg-slate-800/50 border-slate-700/50 hover:border-blue-500/30 transition-all duration-300 group h-full">
                   <CardHeader className="pb-2">
                     <motion.div
                       whileHover={{ scale: 1.1, rotate: 5 }}
