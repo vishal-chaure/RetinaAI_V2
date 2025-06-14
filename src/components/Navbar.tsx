@@ -106,26 +106,26 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile Navigation with Glass Morphism */}
+        {/* Mobile Navigation with Enhanced Glass Morphism */}
         {isMenuOpen && (
-          <div className="md:hidden absolute top-14 left-0 right-0 glass-morphism border-b border-white/10">
+          <div className="md:hidden absolute top-14 left-0 right-0 bg-white/10 backdrop-blur-xl border-b border-white/20 shadow-lg">
             <div className="px-4 py-3 space-y-2">
               {navLinks.map((link) => (
                 <Link
                   key={link.name}
                   to={link.path}
-                  className="block text-sm text-slate-300 hover:text-blue-400 transition-colors duration-200 py-2 px-3 rounded-md hover:bg-white/5"
+                  className="block text-sm text-slate-300 hover:text-blue-400 transition-colors duration-200 py-2 px-3 rounded-md hover:bg-white/10"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {link.name}
                 </Link>
               ))}
-              <div className="pt-2 border-t border-white/10">
+              <div className="pt-2 border-t border-white/20">
                 {user ? (
                   <Button 
                     variant="ghost" 
                     onClick={handleSignOut}
-                    className="w-full text-slate-300 hover:text-blue-400 justify-start text-sm hover:bg-white/5"
+                    className="w-full text-slate-300 hover:text-blue-400 justify-start text-sm hover:bg-white/10"
                   >
                     <LogOut className="h-4 w-4 mr-2" />
                     Sign Out
