@@ -106,32 +106,34 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile Navigation with Enhanced Glass Morphism */}
+        {/* Mobile Navigation with Enhanced Glass Morphism and Animation */}
         {isMenuOpen && (
-          <div className="md:hidden absolute top-14 left-0 right-0 bg-white/10 backdrop-blur-xl border-b border-white/20 shadow-lg">
-            <div className="px-4 py-3 space-y-2">
-              {navLinks.map((link) => (
+          <div className="md:hidden absolute top-14 left-0 right-0 bg-slate-900/30 backdrop-blur-2xl border-b border-white/30 shadow-2xl animate-slide-down">
+            <div className="px-4 py-3 space-y-2 bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-3xl">
+              {navLinks.map((link, index) => (
                 <Link
                   key={link.name}
                   to={link.path}
-                  className="block text-sm text-slate-300 hover:text-blue-400 transition-colors duration-200 py-2 px-3 rounded-md hover:bg-white/10"
+                  className="block text-sm text-slate-300 hover:text-blue-400 transition-all duration-300 py-2 px-3 rounded-md hover:bg-white/20 hover:backdrop-blur-xl animate-fade-in-item"
+                  style={{ animationDelay: `${index * 0.1}s` }}
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {link.name}
                 </Link>
               ))}
-              <div className="pt-2 border-t border-white/20">
+              <div className="pt-2 border-t border-white/30">
                 {user ? (
                   <Button 
                     variant="ghost" 
                     onClick={handleSignOut}
-                    className="w-full text-slate-300 hover:text-blue-400 justify-start text-sm hover:bg-white/10"
+                    className="w-full text-slate-300 hover:text-blue-400 justify-start text-sm hover:bg-white/20 hover:backdrop-blur-xl transition-all duration-300 animate-fade-in-item"
+                    style={{ animationDelay: `${navLinks.length * 0.1}s` }}
                   >
                     <LogOut className="h-4 w-4 mr-2" />
                     Sign Out
                   </Button>
                 ) : (
-                  <Link to="/login" className="block">
+                  <Link to="/login" className="block animate-fade-in-item" style={{ animationDelay: `${navLinks.length * 0.1}s` }}>
                     <Button className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white text-sm">
                       Login
                     </Button>
