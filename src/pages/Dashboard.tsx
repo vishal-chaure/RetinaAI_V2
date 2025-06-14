@@ -38,7 +38,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pt-14">
       <WelcomeModal />
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-6xl mx-auto px-8 sm:px-10 lg:px-12 py-6">
         {/* Welcome Section */}
         <div className="text-center mb-6 animate-fade-in">
           {user ? (
