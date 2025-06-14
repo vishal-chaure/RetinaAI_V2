@@ -23,9 +23,9 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col fixed inset-0">
+          <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col">
             <Navbar />
-            <main className="flex-1 overflow-hidden">
+            <main className="flex-1">
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/upload" element={<Upload />} />
