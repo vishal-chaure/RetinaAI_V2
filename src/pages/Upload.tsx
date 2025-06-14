@@ -171,23 +171,23 @@ const Upload = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pt-16">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="text-center mb-4">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-1">
             Retina Analysis
           </h1>
-          <p className="text-lg text-slate-300">
+          <p className="text-base text-slate-300">
             Upload your retina image for AI-powered diabetic retinopathy detection
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-6">
+        <div className="grid lg:grid-cols-2 gap-4">
           {/* Upload Section */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             <Card className="bg-slate-800/50 border-slate-700/50">
-              <CardHeader>
-                <CardTitle className="text-lg text-slate-100">Upload Image</CardTitle>
-                <CardDescription className="text-sm text-slate-300">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base text-slate-100">Upload Image</CardTitle>
+                <CardDescription className="text-xs text-slate-300">
                   Drag and drop your retina image or click to browse
                 </CardDescription>
               </CardHeader>
@@ -195,7 +195,7 @@ const Upload = () => {
                 <div
                   onDrop={handleDrop}
                   onDragOver={handleDragOver}
-                  className="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center hover:border-blue-500/50 transition-colors duration-300 cursor-pointer"
+                  className="border-2 border-dashed border-slate-600 rounded-lg p-4 text-center hover:border-blue-500/50 transition-colors duration-300 cursor-pointer"
                 >
                   <input
                     type="file"
@@ -205,9 +205,9 @@ const Upload = () => {
                     id="file-upload"
                   />
                   <label htmlFor="file-upload" className="cursor-pointer">
-                    <UploadIcon className="mx-auto h-10 w-10 text-slate-400 mb-3" />
-                    <p className="text-slate-300 text-base mb-1">Drop your image here</p>
-                    <p className="text-slate-400 text-sm">or click to browse files</p>
+                    <UploadIcon className="mx-auto h-8 w-8 text-slate-400 mb-2" />
+                    <p className="text-slate-300 text-sm mb-1">Drop your image here</p>
+                    <p className="text-slate-400 text-xs">or click to browse files</p>
                   </label>
                 </div>
               </CardContent>
@@ -215,15 +215,15 @@ const Upload = () => {
 
             {uploadedImage && (
               <Card className="bg-slate-800/50 border-slate-700/50">
-                <CardHeader>
-                  <CardTitle className="text-lg text-slate-100">Image Preview</CardTitle>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base text-slate-100">Image Preview</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="relative">
                     <img
                       src={uploadedImage}
                       alt="Uploaded retina"
-                      className="w-full h-56 object-cover rounded-lg"
+                      className="w-full h-40 object-cover rounded-lg"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-lg" />
                   </div>
@@ -231,7 +231,7 @@ const Upload = () => {
                     <Button
                       onClick={startAnalysis}
                       disabled={isAnalyzing}
-                      className="w-full mt-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white"
+                      className="w-full mt-2 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white text-sm"
                     >
                       {isAnalyzing ? 'Analyzing...' : 'Start Prediction'}
                     </Button>
@@ -242,13 +242,13 @@ const Upload = () => {
 
             {isAnalyzing && (
               <Card className="bg-slate-800/50 border-slate-700/50">
-                <CardContent className="pt-4">
-                  <div className="text-center mb-3">
-                    <div className="animate-spin h-6 w-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-3" />
-                    <p className="text-slate-300 text-sm">Analyzing retina image...</p>
+                <CardContent className="pt-3">
+                  <div className="text-center mb-2">
+                    <div className="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-2" />
+                    <p className="text-slate-300 text-xs">Analyzing retina image...</p>
                   </div>
                   <Progress value={progress} className="w-full" />
-                  <p className="text-center text-slate-400 mt-2 text-sm">{Math.round(progress)}% complete</p>
+                  <p className="text-center text-slate-400 mt-1 text-xs">{Math.round(progress)}% complete</p>
                 </CardContent>
               </Card>
             )}
@@ -256,12 +256,12 @@ const Upload = () => {
 
           {/* Results Section */}
           {analysisComplete && (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {/* Grad-CAM Visualization */}
               <Card className="bg-slate-800/50 border-slate-700/50">
-                <CardHeader>
-                  <CardTitle className="text-lg text-slate-100">Grad-CAM Visualization</CardTitle>
-                  <CardDescription className="text-sm text-slate-300">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base text-slate-100">Grad-CAM Visualization</CardTitle>
+                  <CardDescription className="text-xs text-slate-300">
                     Areas highlighted in red show regions of concern identified by AI
                   </CardDescription>
                 </CardHeader>
@@ -270,7 +270,7 @@ const Upload = () => {
                     <img
                       src={uploadedImage}
                       alt="Grad-CAM visualization"
-                      className="w-full h-56 object-cover rounded-lg"
+                      className="w-full h-40 object-cover rounded-lg"
                     />
                     {/* Overlay to simulate Grad-CAM */}
                     <div className="absolute inset-0 bg-gradient-to-br from-red-500/30 via-transparent to-yellow-500/20 rounded-lg mix-blend-multiply" />
@@ -280,13 +280,13 @@ const Upload = () => {
 
               {/* Confidence Scores */}
               <Card className="bg-slate-800/50 border-slate-700/50">
-                <CardHeader>
-                  <CardTitle className="text-lg text-slate-100 flex items-center">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base text-slate-100 flex items-center">
                     Prediction Confidence
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger>
-                          <Info className="ml-2 h-4 w-4 text-slate-400" />
+                          <Info className="ml-2 h-3 w-3 text-slate-400" />
                         </TooltipTrigger>
                         <TooltipContent className="bg-slate-700 border-slate-600">
                           <div className="space-y-1 text-xs">
@@ -301,16 +301,16 @@ const Upload = () => {
                     </TooltipProvider>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="space-y-1">
                   {prediction.confidences.map((confidence, index) => (
                     <div key={index}>
                       <div className="flex justify-between items-center mb-1">
-                        <span className="text-slate-300 text-sm">Class {index}: {drClasses[index].name}</span>
-                        <span className="text-slate-300 font-semibold text-sm">{confidence}%</span>
+                        <span className="text-slate-300 text-xs">Class {index}: {drClasses[index].name}</span>
+                        <span className="text-slate-300 font-semibold text-xs">{confidence}%</span>
                       </div>
-                      <div className="w-full bg-slate-700 rounded-full h-2">
+                      <div className="w-full bg-slate-700 rounded-full h-1.5">
                         <div
-                          className={`h-2 rounded-full bg-gradient-to-r ${getConfidenceColor(confidence)}`}
+                          className={`h-1.5 rounded-full bg-gradient-to-r ${getConfidenceColor(confidence)}`}
                           style={{ width: `${confidence}%` }}
                         />
                       </div>
@@ -321,11 +321,11 @@ const Upload = () => {
 
               {/* AI Explanation */}
               <Card className="bg-slate-800/50 border-slate-700/50">
-                <CardHeader>
-                  <CardTitle className="text-lg text-slate-100">AI Analysis</CardTitle>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base text-slate-100">AI Analysis</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-slate-300 leading-relaxed text-sm">
+                  <p className="text-slate-300 leading-relaxed text-xs">
                     {explanationText}
                     {isTyping && <span className="animate-pulse">|</span>}
                   </p>
@@ -334,23 +334,23 @@ const Upload = () => {
 
               {/* Save and Download Options */}
               <Card className="bg-slate-800/50 border-slate-700/50">
-                <CardHeader>
-                  <CardTitle className="text-lg text-slate-100">Save & Download</CardTitle>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base text-slate-100">Save & Download</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <Button 
                     onClick={savePredictionToDatabase}
                     disabled={isSaving}
-                    className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+                    className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-xs"
                   >
                     {isSaving ? 'Saving...' : 'Save to History'}
                   </Button>
-                  <Button variant="outline" className="w-full justify-start border-slate-600 text-slate-300 text-sm">
-                    <Download className="mr-2 h-4 w-4" />
+                  <Button variant="outline" className="w-full justify-start border-slate-600 text-slate-300 text-xs">
+                    <Download className="mr-2 h-3 w-3" />
                     Download Grad-CAM Image (.png)
                   </Button>
-                  <Button variant="outline" className="w-full justify-start border-slate-600 text-slate-300 text-sm">
-                    <FileText className="mr-2 h-4 w-4" />
+                  <Button variant="outline" className="w-full justify-start border-slate-600 text-slate-300 text-xs">
+                    <FileText className="mr-2 h-3 w-3" />
                     Download Full Report (.pdf)
                   </Button>
                 </CardContent>

@@ -57,10 +57,34 @@
   body {
     @apply bg-background text-foreground font-sans;
     font-feature-settings: "rlig" 1, "calt" 1;
+    font-size: 14px; /* Base font size smaller */
   }
 
   html {
     scroll-behavior: smooth;
+  }
+
+  /* Make all fonts smaller except navbar */
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.25rem; }
+  h4 { font-size: 1.1rem; }
+  h5 { font-size: 1rem; }
+  h6 { font-size: 0.9rem; }
+  
+  p { font-size: 0.875rem; }
+  span { font-size: 0.875rem; }
+  div { font-size: 0.875rem; }
+  
+  /* Button text smaller */
+  button { font-size: 0.8rem; }
+  
+  /* Input text smaller */
+  input, textarea, select { font-size: 0.8rem; }
+  
+  /* Keep navbar fonts normal size */
+  nav, nav * {
+    font-size: revert !important;
   }
 }
 
