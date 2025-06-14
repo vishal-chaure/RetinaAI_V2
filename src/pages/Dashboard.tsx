@@ -67,25 +67,25 @@ const Dashboard = () => {
           </motion.p>
         </div>
 
-        {/* Quick Upload Card */}
+        {/* Minimized Quick Upload Card */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
-          className="mb-6"
+          className="mb-6 max-w-md mx-auto"
         >
           <Card className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-500/20 hover:border-blue-400/30 transition-all duration-300">
             <CardHeader className="text-center pb-2">
               <motion.div
                 whileHover={{ scale: 1.1 }}
                 transition={{ duration: 0.2 }}
-                className="mx-auto w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mb-2"
+                className="mx-auto w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mb-2"
               >
-                <Upload className="h-5 w-5 text-white" />
+                <Upload className="h-4 w-4 text-white" />
               </motion.div>
-              <CardTitle className="text-lg text-slate-100">Start Your Analysis</CardTitle>
-              <CardDescription className="text-sm text-slate-300">
-                Upload your retina image for instant AI-powered screening
+              <CardTitle className="text-base text-slate-100">Start Analysis</CardTitle>
+              <CardDescription className="text-xs text-slate-300">
+                Upload retina image for AI screening
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center">
@@ -95,9 +95,9 @@ const Dashboard = () => {
                   whileTap={{ scale: 0.95 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Button size="lg" className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white px-5 py-2 text-sm">
+                  <Button size="sm" className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white px-4 py-1 text-xs">
                     Upload Image
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    <ArrowRight className="ml-1 h-3 w-3" />
                   </Button>
                 </motion.div>
               </Link>
