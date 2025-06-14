@@ -5,6 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Upload as UploadIcon, Image, Download, FileText, Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 const Upload = () => {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
@@ -18,6 +22,11 @@ const Upload = () => {
   });
   const [explanationText, setExplanationText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   const drClasses = [
     { name: "No DR", description: "No signs of diabetic retinopathy" },
@@ -55,7 +64,70 @@ const Upload = () => {
     reader.readAsDataURL(file);
   };
 
+  const savePredictionToDatabase = async () => {
+    if (!user || !uploadedImage) {
+      toast({
+        title: "Error",
+        description: "Please log in to save predictions",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      // Convert confidence percentages to decimals and create scores object
+      const confidenceScores = prediction.confidences.reduce((acc, conf, index) => {
+        acc[index] = conf / 100;
+        return acc;
+      }, {} as Record<number, number>);
+
+      const { data, error } = await supabase
+        .from('predictions')
+        .insert({
+          user_id: user.id,
+          image_url: uploadedImage,
+          gradcam_url: uploadedImage, // Using same image for now, could be actual grad-cam later
+          prediction_class: prediction.class,
+          confidence_scores: confidenceScores,
+          ai_explanation: prediction.explanation
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Prediction saved successfully!",
+      });
+
+      // Navigate to the prediction details page
+      navigate(`/prediction/${data.id}`);
+    } catch (error) {
+      console.error('Error saving prediction:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save prediction",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const startAnalysis = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to analyze images",
+        variant: "destructive",
+      });
+      navigate('/login');
+      return;
+    }
+
     setIsAnalyzing(true);
     setProgress(0);
     
@@ -99,23 +171,23 @@ const Upload = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pt-16">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-4">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="text-center mb-6">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2">
             Retina Analysis
           </h1>
-          <p className="text-xl text-slate-300">
+          <p className="text-lg text-slate-300">
             Upload your retina image for AI-powered diabetic retinopathy detection
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-2 gap-6">
           {/* Upload Section */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             <Card className="bg-slate-800/50 border-slate-700/50">
               <CardHeader>
-                <CardTitle className="text-xl text-slate-100">Upload Image</CardTitle>
-                <CardDescription className="text-slate-300">
+                <CardTitle className="text-lg text-slate-100">Upload Image</CardTitle>
+                <CardDescription className="text-sm text-slate-300">
                   Drag and drop your retina image or click to browse
                 </CardDescription>
               </CardHeader>
@@ -123,7 +195,7 @@ const Upload = () => {
                 <div
                   onDrop={handleDrop}
                   onDragOver={handleDragOver}
-                  className="border-2 border-dashed border-slate-600 rounded-lg p-8 text-center hover:border-blue-500/50 transition-colors duration-300 cursor-pointer"
+                  className="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center hover:border-blue-500/50 transition-colors duration-300 cursor-pointer"
                 >
                   <input
                     type="file"
@@ -133,9 +205,9 @@ const Upload = () => {
                     id="file-upload"
                   />
                   <label htmlFor="file-upload" className="cursor-pointer">
-                    <UploadIcon className="mx-auto h-12 w-12 text-slate-400 mb-4" />
-                    <p className="text-slate-300 text-lg mb-2">Drop your image here</p>
-                    <p className="text-slate-400">or click to browse files</p>
+                    <UploadIcon className="mx-auto h-10 w-10 text-slate-400 mb-3" />
+                    <p className="text-slate-300 text-base mb-1">Drop your image here</p>
+                    <p className="text-slate-400 text-sm">or click to browse files</p>
                   </label>
                 </div>
               </CardContent>
@@ -144,14 +216,14 @@ const Upload = () => {
             {uploadedImage && (
               <Card className="bg-slate-800/50 border-slate-700/50">
                 <CardHeader>
-                  <CardTitle className="text-xl text-slate-100">Image Preview</CardTitle>
+                  <CardTitle className="text-lg text-slate-100">Image Preview</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="relative">
                     <img
                       src={uploadedImage}
                       alt="Uploaded retina"
-                      className="w-full h-64 object-cover rounded-lg"
+                      className="w-full h-56 object-cover rounded-lg"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-lg" />
                   </div>
@@ -159,7 +231,7 @@ const Upload = () => {
                     <Button
                       onClick={startAnalysis}
                       disabled={isAnalyzing}
-                      className="w-full mt-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white"
+                      className="w-full mt-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white"
                     >
                       {isAnalyzing ? 'Analyzing...' : 'Start Prediction'}
                     </Button>
@@ -170,13 +242,13 @@ const Upload = () => {
 
             {isAnalyzing && (
               <Card className="bg-slate-800/50 border-slate-700/50">
-                <CardContent className="pt-6">
-                  <div className="text-center mb-4">
-                    <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
-                    <p className="text-slate-300">Analyzing retina image...</p>
+                <CardContent className="pt-4">
+                  <div className="text-center mb-3">
+                    <div className="animate-spin h-6 w-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-3" />
+                    <p className="text-slate-300 text-sm">Analyzing retina image...</p>
                   </div>
                   <Progress value={progress} className="w-full" />
-                  <p className="text-center text-slate-400 mt-2">{Math.round(progress)}% complete</p>
+                  <p className="text-center text-slate-400 mt-2 text-sm">{Math.round(progress)}% complete</p>
                 </CardContent>
               </Card>
             )}
@@ -184,12 +256,12 @@ const Upload = () => {
 
           {/* Results Section */}
           {analysisComplete && (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {/* Grad-CAM Visualization */}
               <Card className="bg-slate-800/50 border-slate-700/50">
                 <CardHeader>
-                  <CardTitle className="text-xl text-slate-100">Grad-CAM Visualization</CardTitle>
-                  <CardDescription className="text-slate-300">
+                  <CardTitle className="text-lg text-slate-100">Grad-CAM Visualization</CardTitle>
+                  <CardDescription className="text-sm text-slate-300">
                     Areas highlighted in red show regions of concern identified by AI
                   </CardDescription>
                 </CardHeader>
@@ -198,7 +270,7 @@ const Upload = () => {
                     <img
                       src={uploadedImage}
                       alt="Grad-CAM visualization"
-                      className="w-full h-64 object-cover rounded-lg"
+                      className="w-full h-56 object-cover rounded-lg"
                     />
                     {/* Overlay to simulate Grad-CAM */}
                     <div className="absolute inset-0 bg-gradient-to-br from-red-500/30 via-transparent to-yellow-500/20 rounded-lg mix-blend-multiply" />
@@ -209,7 +281,7 @@ const Upload = () => {
               {/* Confidence Scores */}
               <Card className="bg-slate-800/50 border-slate-700/50">
                 <CardHeader>
-                  <CardTitle className="text-xl text-slate-100 flex items-center">
+                  <CardTitle className="text-lg text-slate-100 flex items-center">
                     Prediction Confidence
                     <TooltipProvider>
                       <Tooltip>
@@ -217,7 +289,7 @@ const Upload = () => {
                           <Info className="ml-2 h-4 w-4 text-slate-400" />
                         </TooltipTrigger>
                         <TooltipContent className="bg-slate-700 border-slate-600">
-                          <div className="space-y-1 text-sm">
+                          <div className="space-y-1 text-xs">
                             {drClasses.map((cls, index) => (
                               <div key={index}>
                                 <strong>Class {index}:</strong> {cls.description}
@@ -229,12 +301,12 @@ const Upload = () => {
                     </TooltipProvider>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-2">
                   {prediction.confidences.map((confidence, index) => (
                     <div key={index}>
                       <div className="flex justify-between items-center mb-1">
-                        <span className="text-slate-300">Class {index}: {drClasses[index].name}</span>
-                        <span className="text-slate-300 font-semibold">{confidence}%</span>
+                        <span className="text-slate-300 text-sm">Class {index}: {drClasses[index].name}</span>
+                        <span className="text-slate-300 font-semibold text-sm">{confidence}%</span>
                       </div>
                       <div className="w-full bg-slate-700 rounded-full h-2">
                         <div
@@ -250,27 +322,34 @@ const Upload = () => {
               {/* AI Explanation */}
               <Card className="bg-slate-800/50 border-slate-700/50">
                 <CardHeader>
-                  <CardTitle className="text-xl text-slate-100">AI Analysis</CardTitle>
+                  <CardTitle className="text-lg text-slate-100">AI Analysis</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-slate-300 leading-relaxed">
+                  <p className="text-slate-300 leading-relaxed text-sm">
                     {explanationText}
                     {isTyping && <span className="animate-pulse">|</span>}
                   </p>
                 </CardContent>
               </Card>
 
-              {/* Download Options */}
+              {/* Save and Download Options */}
               <Card className="bg-slate-800/50 border-slate-700/50">
                 <CardHeader>
-                  <CardTitle className="text-xl text-slate-100">Download Results</CardTitle>
+                  <CardTitle className="text-lg text-slate-100">Save & Download</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <Button variant="outline" className="w-full justify-start border-slate-600 text-slate-300">
+                <CardContent className="space-y-2">
+                  <Button 
+                    onClick={savePredictionToDatabase}
+                    disabled={isSaving}
+                    className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+                  >
+                    {isSaving ? 'Saving...' : 'Save to History'}
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start border-slate-600 text-slate-300 text-sm">
                     <Download className="mr-2 h-4 w-4" />
                     Download Grad-CAM Image (.png)
                   </Button>
-                  <Button variant="outline" className="w-full justify-start border-slate-600 text-slate-300">
+                  <Button variant="outline" className="w-full justify-start border-slate-600 text-slate-300 text-sm">
                     <FileText className="mr-2 h-4 w-4" />
                     Download Full Report (.pdf)
                   </Button>
