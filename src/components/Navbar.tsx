@@ -108,7 +108,7 @@ const Navbar = () => {
 
         {/* Mobile Navigation with Navbar-like Glass Morphism */}
         {isMenuOpen && (
-          <div className="md:hidden absolute top-14 left-4 right-4 mx-2 bg-slate-900/95 backdrop-blur-md border border-slate-700/50 rounded-lg shadow-2xl animate-slide-down">
+          <div className="md:hidden absolute top-14 left-2 right-2 mx-1 bg-slate-900/95 backdrop-blur-md border border-slate-700/50 rounded-lg shadow-2xl animate-slide-down">
             <div className="px-6 py-4 space-y-2">
               {navLinks.map((link, index) => (
                 <Link
