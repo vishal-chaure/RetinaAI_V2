@@ -1,0 +1,287 @@
+
+import React, { useState, useCallback } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Upload as UploadIcon, Image, Download, FileText, Info } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
+const Upload = () => {
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisComplete, setAnalysisComplete] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [prediction, setPrediction] = useState({
+    class: 2,
+    confidences: [5, 15, 65, 12, 3], // Percentages for classes 0-4
+    explanation: "The analysis reveals moderate non-proliferative diabetic retinopathy with microaneurysms and dot hemorrhages visible in the central retinal area. The AI model detected characteristic changes in blood vessel patterns consistent with diabetic damage. Early intervention and regular monitoring are recommended to prevent progression."
+  });
+  const [explanationText, setExplanationText] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+
+  const drClasses = [
+    { name: "No DR", description: "No signs of diabetic retinopathy" },
+    { name: "Mild NPDR", description: "Mild non-proliferative diabetic retinopathy" },
+    { name: "Moderate NPDR", description: "Moderate non-proliferative diabetic retinopathy" },
+    { name: "Severe NPDR", description: "Severe non-proliferative diabetic retinopathy" },
+    { name: "PDR", description: "Proliferative diabetic retinopathy" }
+  ];
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      handleFile(files[0]);
+    }
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+  }, []);
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFile(e.target.files[0]);
+    }
+  };
+
+  const handleFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setUploadedImage(e.target?.result as string);
+      setAnalysisComplete(false);
+      setExplanationText('');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const startAnalysis = async () => {
+    setIsAnalyzing(true);
+    setProgress(0);
+    
+    // Simulate analysis progress
+    const progressInterval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(progressInterval);
+          setIsAnalyzing(false);
+          setAnalysisComplete(true);
+          startTypingEffect();
+          return 100;
+        }
+        return prev + Math.random() * 15;
+      });
+    }, 300);
+  };
+
+  const startTypingEffect = () => {
+    setIsTyping(true);
+    const text = prediction.explanation;
+    let i = 0;
+    
+    const typeInterval = setInterval(() => {
+      if (i < text.length) {
+        setExplanationText(text.slice(0, i + 1));
+        i++;
+      } else {
+        clearInterval(typeInterval);
+        setIsTyping(false);
+      }
+    }, 30);
+  };
+
+  const getConfidenceColor = (confidence: number) => {
+    if (confidence > 50) return 'from-red-500 to-red-600';
+    if (confidence > 30) return 'from-orange-500 to-orange-600';
+    if (confidence > 15) return 'from-yellow-500 to-yellow-600';
+    return 'from-green-500 to-green-600';
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pt-16">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-4">
+            Retina Analysis
+          </h1>
+          <p className="text-xl text-slate-300">
+            Upload your retina image for AI-powered diabetic retinopathy detection
+          </p>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-8">
+          {/* Upload Section */}
+          <div className="space-y-6">
+            <Card className="bg-slate-800/50 border-slate-700/50">
+              <CardHeader>
+                <CardTitle className="text-xl text-slate-100">Upload Image</CardTitle>
+                <CardDescription className="text-slate-300">
+                  Drag and drop your retina image or click to browse
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                  className="border-2 border-dashed border-slate-600 rounded-lg p-8 text-center hover:border-blue-500/50 transition-colors duration-300 cursor-pointer"
+                >
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileInput}
+                    className="hidden"
+                    id="file-upload"
+                  />
+                  <label htmlFor="file-upload" className="cursor-pointer">
+                    <UploadIcon className="mx-auto h-12 w-12 text-slate-400 mb-4" />
+                    <p className="text-slate-300 text-lg mb-2">Drop your image here</p>
+                    <p className="text-slate-400">or click to browse files</p>
+                  </label>
+                </div>
+              </CardContent>
+            </Card>
+
+            {uploadedImage && (
+              <Card className="bg-slate-800/50 border-slate-700/50">
+                <CardHeader>
+                  <CardTitle className="text-xl text-slate-100">Image Preview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="relative">
+                    <img
+                      src={uploadedImage}
+                      alt="Uploaded retina"
+                      className="w-full h-64 object-cover rounded-lg"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-lg" />
+                  </div>
+                  {!analysisComplete && (
+                    <Button
+                      onClick={startAnalysis}
+                      disabled={isAnalyzing}
+                      className="w-full mt-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white"
+                    >
+                      {isAnalyzing ? 'Analyzing...' : 'Start Prediction'}
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {isAnalyzing && (
+              <Card className="bg-slate-800/50 border-slate-700/50">
+                <CardContent className="pt-6">
+                  <div className="text-center mb-4">
+                    <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
+                    <p className="text-slate-300">Analyzing retina image...</p>
+                  </div>
+                  <Progress value={progress} className="w-full" />
+                  <p className="text-center text-slate-400 mt-2">{Math.round(progress)}% complete</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Results Section */}
+          {analysisComplete && (
+            <div className="space-y-6">
+              {/* Grad-CAM Visualization */}
+              <Card className="bg-slate-800/50 border-slate-700/50">
+                <CardHeader>
+                  <CardTitle className="text-xl text-slate-100">Grad-CAM Visualization</CardTitle>
+                  <CardDescription className="text-slate-300">
+                    Areas highlighted in red show regions of concern identified by AI
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="relative">
+                    <img
+                      src={uploadedImage}
+                      alt="Grad-CAM visualization"
+                      className="w-full h-64 object-cover rounded-lg"
+                    />
+                    {/* Overlay to simulate Grad-CAM */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-red-500/30 via-transparent to-yellow-500/20 rounded-lg mix-blend-multiply" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Confidence Scores */}
+              <Card className="bg-slate-800/50 border-slate-700/50">
+                <CardHeader>
+                  <CardTitle className="text-xl text-slate-100 flex items-center">
+                    Prediction Confidence
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Info className="ml-2 h-4 w-4 text-slate-400" />
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-slate-700 border-slate-600">
+                          <div className="space-y-1 text-sm">
+                            {drClasses.map((cls, index) => (
+                              <div key={index}>
+                                <strong>Class {index}:</strong> {cls.description}
+                              </div>
+                            ))}
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {prediction.confidences.map((confidence, index) => (
+                    <div key={index}>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-slate-300">Class {index}: {drClasses[index].name}</span>
+                        <span className="text-slate-300 font-semibold">{confidence}%</span>
+                      </div>
+                      <div className="w-full bg-slate-700 rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full bg-gradient-to-r ${getConfidenceColor(confidence)}`}
+                          style={{ width: `${confidence}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              {/* AI Explanation */}
+              <Card className="bg-slate-800/50 border-slate-700/50">
+                <CardHeader>
+                  <CardTitle className="text-xl text-slate-100">AI Analysis</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-slate-300 leading-relaxed">
+                    {explanationText}
+                    {isTyping && <span className="animate-pulse">|</span>}
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Download Options */}
+              <Card className="bg-slate-800/50 border-slate-700/50">
+                <CardHeader>
+                  <CardTitle className="text-xl text-slate-100">Download Results</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button variant="outline" className="w-full justify-start border-slate-600 text-slate-300">
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Grad-CAM Image (.png)
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start border-slate-600 text-slate-300">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Download Full Report (.pdf)
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Upload;
