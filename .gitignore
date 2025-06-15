@@ -24,3 +24,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# ML Model files
+*.h5
+fine_tuned_resnet50_model.h5
