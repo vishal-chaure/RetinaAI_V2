@@ -1,26 +1,62 @@
-
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Download, FileText, Calendar, TrendingUp, AlertCircle, Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+interface Prediction {
+  id: string;
+  created_at: string;
+  prediction_class: number;
+  confidence_scores: any;
+  image_url: string;
+  gradcam_url: string;
+  ai_explanation: string;
+  user_id: string;
+}
 
 const PredictionDetails = () => {
   const { id } = useParams();
-  
-  // Mock data - in real app this would come from API/database
-  const prediction = {
-    id: id,
-    date: '2024-06-14',
-    time: '14:30',
-    class: 2,
-    confidences: [5, 15, 65, 12, 3],
-    originalImage: '/placeholder.svg',
-    gradcamImage: '/placeholder.svg',
-    status: 'Moderate NPDR',
-    explanation: "The analysis reveals moderate non-proliferative diabetic retinopathy with microaneurysms and dot hemorrhages visible in the central retinal area. The AI model detected characteristic changes in blood vessel patterns consistent with diabetic damage. Early intervention and regular monitoring are recommended to prevent progression. The presence of hard exudates and cotton wool spots indicates ongoing vascular compromise that requires clinical attention."
+  const [prediction, setPrediction] = useState<Prediction | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    fetchPredictionDetails();
+  }, [id, user, navigate]);
+
+  const fetchPredictionDetails = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('predictions')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      setPrediction(data);
+    } catch (error) {
+      console.error('Error fetching prediction details:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load prediction details",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const drClasses = [
@@ -47,24 +83,89 @@ const PredictionDetails = () => {
     return <AlertCircle className="h-4 w-4" />;
   };
 
-  const getConfidenceColor = (confidence: number) => {
-    if (confidence > 50) return 'from-red-500 to-red-600';
-    if (confidence > 30) return 'from-orange-500 to-orange-600';
-    if (confidence > 15) return 'from-yellow-500 to-yellow-600';
-    return 'from-green-500 to-green-600';
-  };
-
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-US', { 
       year: 'numeric', 
       month: 'long', 
-      day: 'numeric' 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
 
+  const handleDownload = async (type: 'original' | 'gradcam' | 'report') => {
+    if (!prediction) return;
+
+    try {
+      let url: string;
+      let filename: string;
+
+      switch (type) {
+        case 'original':
+          url = prediction.image_url;
+          filename = `retina-scan-${prediction.id}.jpg`;
+          break;
+        case 'gradcam':
+          url = prediction.gradcam_url;
+          filename = `gradcam-${prediction.id}.png`;
+          break;
+        case 'report':
+          // Generate PDF report
+          const reportData = {
+            date: formatDate(prediction.created_at),
+            class: drClasses[prediction.prediction_class].name,
+            confidence: `${(prediction.confidence_scores[prediction.prediction_class] * 100).toFixed(2)}%`,
+            explanation: prediction.ai_explanation
+          };
+          // TODO: Implement PDF generation
+          toast({
+            title: "Coming Soon",
+            description: "PDF report generation will be available soon",
+          });
+          return;
+      }
+
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      toast({
+        title: "Error",
+        description: "Failed to download file",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (!user) return null;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pt-16 flex items-center justify-center">
+        <div className="text-slate-300">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!prediction) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pt-16 flex items-center justify-center">
+        <div className="text-slate-300">Prediction not found</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pt-16">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-800 to-slate-950 pt-16">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -81,14 +182,14 @@ const PredictionDetails = () => {
               </h1>
               <div className="flex items-center text-slate-400 mt-1">
                 <Calendar className="h-4 w-4 mr-1" />
-                {formatDate(prediction.date)} at {prediction.time}
+                {formatDate(prediction.created_at)}
               </div>
             </div>
           </div>
           
-          <Badge className={`${getStatusColor(prediction.class)} text-white px-4 py-2`}>
-            {getStatusIcon(prediction.class)}
-            <span className="ml-2">{prediction.status}</span>
+          <Badge className={`${getStatusColor(prediction.prediction_class)} text-white px-4 py-2`}>
+            {getStatusIcon(prediction.prediction_class)}
+            <span className="ml-2">{drClasses[prediction.prediction_class].name}</span>
           </Badge>
         </div>
 
@@ -104,7 +205,7 @@ const PredictionDetails = () => {
               </CardHeader>
               <CardContent>
                 <img
-                  src={prediction.originalImage}
+                  src={prediction.image_url}
                   alt="Original retina image"
                   className="w-full h-64 object-cover rounded-lg"
                 />
@@ -119,22 +220,18 @@ const PredictionDetails = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="relative">
-                  <img
-                    src={prediction.gradcamImage}
-                    alt="Grad-CAM visualization"
-                    className="w-full h-64 object-cover rounded-lg"
-                  />
-                  {/* Overlay to simulate Grad-CAM */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-red-500/30 via-transparent to-yellow-500/20 rounded-lg mix-blend-multiply" />
-                </div>
+                <img
+                  src={prediction.gradcam_url}
+                  alt="Grad-CAM visualization"
+                  className="w-full h-64 object-cover rounded-lg"
+                />
               </CardContent>
             </Card>
           </div>
 
           {/* Analysis Results */}
           <div className="space-y-6">
-            {/* Confidence Scores */}
+            {/* Confidence Score */}
             <Card className="bg-slate-800/50 border-slate-700/50">
               <CardHeader>
                 <CardTitle className="text-xl text-slate-100 flex items-center">
@@ -157,21 +254,25 @@ const PredictionDetails = () => {
                   </TooltipProvider>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                {prediction.confidences.map((confidence, index) => (
-                  <div key={index}>
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-slate-300">Class {index}: {drClasses[index].name}</span>
-                      <span className="text-slate-300 font-semibold">{confidence}%</span>
-                    </div>
-                    <div className="w-full bg-slate-700 rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full bg-gradient-to-r ${getConfidenceColor(confidence)}`}
-                        style={{ width: `${confidence}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
+              <CardContent>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-slate-300">
+                    {drClasses[prediction.prediction_class].name}
+                  </span>
+                  <span className="text-slate-300 font-semibold">
+                    {(prediction.confidence_scores[prediction.prediction_class] * 100).toFixed(2)}%
+                  </span>
+                </div>
+                <div className="w-full bg-slate-700 rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full bg-gradient-to-r ${
+                      prediction.confidence_scores[prediction.prediction_class] >= 0.8 ? 'from-green-500 to-green-600' :
+                      prediction.confidence_scores[prediction.prediction_class] >= 0.6 ? 'from-yellow-500 to-yellow-600' :
+                      'from-red-500 to-red-600'
+                    }`}
+                    style={{ width: `${prediction.confidence_scores[prediction.prediction_class] * 100}%` }}
+                  />
+                </div>
               </CardContent>
             </Card>
 
@@ -185,7 +286,7 @@ const PredictionDetails = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-slate-300 leading-relaxed">
-                  {prediction.explanation}
+                  {prediction.ai_explanation}
                 </p>
               </CardContent>
             </Card>
@@ -199,15 +300,27 @@ const PredictionDetails = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button variant="outline" className="w-full justify-start border-slate-600 text-slate-300 hover:bg-slate-700">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start border-slate-600 text-slate-300 hover:bg-slate-700"
+                  onClick={() => handleDownload('original')}
+                >
                   <Download className="mr-2 h-4 w-4" />
                   Download Original Image (.jpg)
                 </Button>
-                <Button variant="outline" className="w-full justify-start border-slate-600 text-slate-300 hover:bg-slate-700">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start border-slate-600 text-slate-300 hover:bg-slate-700"
+                  onClick={() => handleDownload('gradcam')}
+                >
                   <Download className="mr-2 h-4 w-4" />
                   Download Grad-CAM Image (.png)
                 </Button>
-                <Button variant="outline" className="w-full justify-start border-slate-600 text-slate-300 hover:bg-slate-700">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start border-slate-600 text-slate-300 hover:bg-slate-700"
+                  onClick={() => handleDownload('report')}
+                >
                   <FileText className="mr-2 h-4 w-4" />
                   Download Full Report (.pdf)
                 </Button>

@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,15 +9,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
+const API_URL = 'http://localhost:5000';
+
 const Upload = () => {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [progress, setProgress] = useState(0);
   const [prediction, setPrediction] = useState({
-    class: 2,
-    confidences: [5, 15, 65, 12, 3], // Percentages for classes 0-4
-    explanation: "The analysis reveals moderate non-proliferative diabetic retinopathy with microaneurysms and dot hemorrhages visible in the central retinal area. The AI model detected characteristic changes in blood vessel patterns consistent with diabetic damage. Early intervention and regular monitoring are recommended to prevent progression."
+    class: 0,
+    confidences: [0, 0, 0, 0, 0],
+    explanation: "",
+    gradcam_image: ""
   });
   const [explanationText, setExplanationText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -77,20 +79,17 @@ const Upload = () => {
     setIsSaving(true);
 
     try {
-      // Convert confidence percentages to decimals and create scores object
-      const confidenceScores = prediction.confidences.reduce((acc, conf, index) => {
-        acc[index] = conf / 100;
-        return acc;
-      }, {} as Record<number, number>);
-
       const { data, error } = await supabase
         .from('predictions')
         .insert({
           user_id: user.id,
           image_url: uploadedImage,
-          gradcam_url: uploadedImage, // Using same image for now, could be actual grad-cam later
+          gradcam_url: prediction.gradcam_image,
           prediction_class: prediction.class,
-          confidence_scores: confidenceScores,
+          confidence_scores: prediction.confidences.reduce((acc, conf, index) => {
+            acc[index] = conf;
+            return acc;
+          }, {} as Record<number, number>),
           ai_explanation: prediction.explanation
         })
         .select()
@@ -103,7 +102,6 @@ const Upload = () => {
         description: "Prediction saved successfully!",
       });
 
-      // Navigate to the prediction details page
       navigate(`/prediction/${data.id}`);
     } catch (error) {
       console.error('Error saving prediction:', error);
@@ -128,27 +126,60 @@ const Upload = () => {
       return;
     }
 
+    if (!uploadedImage) {
+      toast({
+        title: "Error",
+        description: "Please upload an image first",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsAnalyzing(true);
     setProgress(0);
     
-    // Simulate analysis progress
-    const progressInterval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          setIsAnalyzing(false);
-          setAnalysisComplete(true);
-          startTypingEffect();
-          return 100;
-        }
-        return prev + Math.random() * 15;
+    try {
+      const response = await fetch(`${API_URL}/predict`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image: uploadedImage
+        })
       });
-    }, 300);
+
+      if (!response.ok) {
+        throw new Error('Failed to analyze image');
+      }
+
+      const result = await response.json();
+      
+      setPrediction({
+        class: result.prediction_class,
+        confidences: Object.values(result.confidence_scores || {}),
+        explanation: result.explanation,
+        gradcam_image: result.gradcam_image
+      });
+      
+      setAnalysisComplete(true);
+      startTypingEffect(result.explanation);
+    } catch (error) {
+      console.error('Error analyzing image:', error);
+      toast({
+        title: "Error",
+        description: "Failed to analyze image. Please try again.",
+        variant: "destructive",
+      });
+      setAnalysisComplete(false);
+    } finally {
+      setIsAnalyzing(false);
+      setProgress(100);
+    }
   };
 
-  const startTypingEffect = () => {
+  const startTypingEffect = (text: string) => {
     setIsTyping(true);
-    const text = prediction.explanation;
     let i = 0;
     
     const typeInterval = setInterval(() => {
@@ -159,25 +190,25 @@ const Upload = () => {
         clearInterval(typeInterval);
         setIsTyping(false);
       }
-    }, 30);
+    }, 10);
   };
 
   const getConfidenceColor = (confidence: number) => {
-    if (confidence > 50) return 'from-red-500 to-red-600';
-    if (confidence > 30) return 'from-orange-500 to-orange-600';
-    if (confidence > 15) return 'from-yellow-500 to-yellow-600';
+    if (confidence > 0.5) return 'from-red-500 to-red-600';
+    if (confidence > 0.3) return 'from-orange-500 to-orange-600';
+    if (confidence > 0.15) return 'from-yellow-500 to-yellow-600';
     return 'from-green-500 to-green-600';
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pt-16">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-800 to-slate-950 pt-16">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="text-center mb-4">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-1">
             Retina Analysis
           </h1>
           <p className="text-base text-slate-300">
-            Upload your retina image for AI-powered diabetic retinopathy detection
+            Upload your retina image for ML-powered diabetic retinopathy detection
           </p>
         </div>
 
@@ -223,7 +254,7 @@ const Upload = () => {
                     <img
                       src={uploadedImage}
                       alt="Uploaded retina"
-                      className="w-full h-40 object-cover rounded-lg"
+                      className="w-full h-40 object-contain rounded-lg bg-slate-900/50"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-lg" />
                   </div>
@@ -248,7 +279,6 @@ const Upload = () => {
                     <p className="text-slate-300 text-xs">Analyzing retina image...</p>
                   </div>
                   <Progress value={progress} className="w-full" />
-                  <p className="text-center text-slate-400 mt-1 text-xs">{Math.round(progress)}% complete</p>
                 </CardContent>
               </Card>
             )}
@@ -257,102 +287,77 @@ const Upload = () => {
           {/* Results Section */}
           {analysisComplete && (
             <div className="space-y-3">
-              {/* Grad-CAM Visualization */}
               <Card className="bg-slate-800/50 border-slate-700/50">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base text-slate-100">Grad-CAM Visualization</CardTitle>
-                  <CardDescription className="text-xs text-slate-300">
-                    Areas highlighted in red show regions of concern identified by AI
-                  </CardDescription>
+                  <CardTitle className="text-base text-slate-100">Analysis Results</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="relative">
-                    <img
-                      src={uploadedImage}
-                      alt="Grad-CAM visualization"
-                      className="w-full h-40 object-cover rounded-lg"
-                    />
-                    {/* Overlay to simulate Grad-CAM */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-red-500/30 via-transparent to-yellow-500/20 rounded-lg mix-blend-multiply" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Confidence Scores */}
-              <Card className="bg-slate-800/50 border-slate-700/50">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base text-slate-100 flex items-center">
-                    Prediction Confidence
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Info className="ml-2 h-3 w-3 text-slate-400" />
-                        </TooltipTrigger>
-                        <TooltipContent className="bg-slate-700 border-slate-600">
-                          <div className="space-y-1 text-xs">
-                            {drClasses.map((cls, index) => (
-                              <div key={index}>
-                                <strong>Class {index}:</strong> {cls.description}
-                              </div>
-                            ))}
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-1">
-                  {prediction.confidences.map((confidence, index) => (
-                    <div key={index}>
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-slate-300 text-xs">Class {index}: {drClasses[index].name}</span>
-                        <span className="text-slate-300 font-semibold text-xs">{confidence}%</span>
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-200 mb-2">Prediction</h3>
+                      <div className="bg-slate-700/50 rounded-lg p-3">
+                        <p className="text-lg font-semibold text-white">
+                          {drClasses[prediction.class].name}
+                        </p>
+                        <p className="text-sm text-slate-300">
+                          {drClasses[prediction.class].description}
+                        </p>
                       </div>
-                      <div className="w-full bg-slate-700 rounded-full h-1.5">
-                        <div
-                          className={`h-1.5 rounded-full bg-gradient-to-r ${getConfidenceColor(confidence)}`}
-                          style={{ width: `${confidence}%` }}
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-200 mb-2">Confidence Scores</h3>
+                      <div className="space-y-2">
+                        {prediction.confidences.map((confidence, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <div className="w-24 text-sm text-slate-300">
+                              {drClasses[index].name}
+                            </div>
+                            <div className="flex-1">
+                              <div className="h-2 rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full bg-gradient-to-r ${getConfidenceColor(confidence)}`}
+                                  style={{ width: `${confidence * 100}%` }}
+                                />
+                              </div>
+                            </div>
+                            <div className="w-12 text-right text-sm text-slate-300">
+                              {(confidence * 100).toFixed(1)}%
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-200 mb-2">AI Explanation</h3>
+                      <div className="bg-slate-700/50 rounded-lg p-3 animate-fade-in">
+                        <p className="text-sm text-slate-300 whitespace-pre-line">
+                          {explanationText}
+                          {isTyping && <span className="animate-pulse">|</span>}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-200 mb-2">Grad-CAM Visualization</h3>
+                      <div className="bg-slate-700/50 rounded-lg p-3">
+                        <img
+                          src={prediction.gradcam_image}
+                          alt="Grad-CAM visualization"
+                          className="w-full rounded-lg"
                         />
                       </div>
                     </div>
-                  ))}
-                </CardContent>
-              </Card>
 
-              {/* AI Explanation */}
-              <Card className="bg-slate-800/50 border-slate-700/50">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base text-slate-100">AI Analysis</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-slate-300 leading-relaxed text-xs">
-                    {explanationText}
-                    {isTyping && <span className="animate-pulse">|</span>}
-                  </p>
-                </CardContent>
-              </Card>
-
-              {/* Save and Download Options */}
-              <Card className="bg-slate-800/50 border-slate-700/50">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base text-slate-100">Save & Download</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <Button 
-                    onClick={savePredictionToDatabase}
-                    disabled={isSaving}
-                    className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-xs"
-                  >
-                    {isSaving ? 'Saving...' : 'Save to History'}
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start border-slate-600 text-slate-300 text-xs">
-                    <Download className="mr-2 h-3 w-3" />
-                    Download Grad-CAM Image (.png)
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start border-slate-600 text-slate-300 text-xs">
-                    <FileText className="mr-2 h-3 w-3" />
-                    Download Full Report (.pdf)
-                  </Button>
+                    <Button
+                      onClick={savePredictionToDatabase}
+                      disabled={isSaving}
+                      className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white"
+                    >
+                      {isSaving ? 'Saving...' : 'Save Prediction'}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </div>

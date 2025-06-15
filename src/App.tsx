@@ -23,7 +23,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col">
+          <div className="min-h-screen bg-gradient-to-br from-black via-slate-800 to-black flex flex-col">
             <Navbar />
             <main className="flex-1">
               <Routes>
@@ -33,8 +33,8 @@ const App = () => (
                 <Route path="/login" element={<Login />} />
                 <Route path="/prediction/:id" element={<PredictionDetails />} />
                 <Route path="/learn" element={<Dashboard />} />
-                <Route path="/blog" element={<Dashboard />} />
-                <Route path="*" element={<NotFound />} />
+                <Route path="/Contact" element={<Footer />} />
+                {/* <Route path="*" element={<NotFound />} /> */}
               </Routes>
             </main>
             <Footer />

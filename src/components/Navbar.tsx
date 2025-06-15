@@ -22,7 +22,7 @@ const Navbar = () => {
     { name: 'Upload', path: '/upload' },
     { name: 'History', path: '/history' },
     { name: 'Learn', path: '/learn' },
-    { name: 'Blog', path: '/blog' },
+    { name: 'Blog', path: '/' },
   ];
 
   const handleSignOut = async () => {
@@ -61,10 +61,10 @@ const Navbar = () => {
               <Link
                 key={link.name}
                 to={link.path}
-                className="text-sm text-slate-300 hover:text-blue-400 transition-colors duration-200 relative group"
+                className="text-balance text-slate-300 hover:text-cyan-500 transition-colors duration-200 relative group"
               >
                 {link.name}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-cyan-400 group-hover:w-full transition-all duration-300"></span>
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-cyan-500 group-hover:w-full transition-all duration-300"></span>
               </Link>
             ))}
           </div>

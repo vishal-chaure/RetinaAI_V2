@@ -1,12 +1,11 @@
-
 import React from 'react';
 import { Heart, Github, Twitter, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Footer = () => {
   return (
-    <footer className="bg-slate-900/50 border-t border-slate-800 mt-auto">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <footer className="bg-slate-900/50 border-t border-slate-800 mt-auto ">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-14">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand Section */}
           <motion.div 
@@ -66,23 +65,27 @@ const Footer = () => {
               <motion.a
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
-                href="#"
+                href="https://github.com/vishal-chaure" // <--- Replace with your GitHub URL
+                target="_blank" // Opens in a new tab
+                rel="noopener noreferrer" // Security best practice for target="_blank"
                 className="w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center hover:bg-blue-500/20 transition-colors"
               >
                 <Github className="h-4 w-4 text-slate-400 hover:text-blue-400" />
               </motion.a>
-              <motion.a
+              {/* <motion.a
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
-                href="#"
+                href="https://twitter.com/your-twitter-handle" // <--- Replace with your Twitter URL
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center hover:bg-blue-500/20 transition-colors"
               >
                 <Twitter className="h-4 w-4 text-slate-400 hover:text-blue-400" />
-              </motion.a>
+              </motion.a> */}
               <motion.a
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
-                href="#"
+                href="mailto:vishal.chaure22@spit.ac.in" // <--- Replace with your email address
                 className="w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center hover:bg-blue-500/20 transition-colors"
               >
                 <Mail className="h-4 w-4 text-slate-400 hover:text-blue-400" />
