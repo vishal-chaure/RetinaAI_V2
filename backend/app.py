@@ -18,7 +18,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Load model
-model = load_model("/Users/pallavichaure/Desktop/Vishal_Codes/RetinaAI_Project/backend/fine_tuned_resnet50_model.h5")
+model = load_model("/Users/pallavichaure/Desktop/fine_tuned_resnet50_model.h5")
 
 # Get last conv layer name
 last_conv_layer = [layer.name for layer in model.layers if 'conv' in layer.name][-1]
