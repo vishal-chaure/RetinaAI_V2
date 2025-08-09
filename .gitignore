@@ -13,6 +13,11 @@ lerna-debug.log*
 .env.development
 .env.production
 
+# Ignore model training and virtual environment folders
+Model_Training/
+venv/
+RetinaAi_Backend/venv/
+
 venv
 backend/
 backend/venv
@@ -36,3 +41,4 @@ dist-ssr
 # ML Model files
 *.h5
 fine_tuned_resnet50_model.h5
+.vercel

@@ -9,7 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
-const API_URL = 'https://retinaaibackend-production-872b.up.railway.app';
+// const API_URL = 'https://retinaaibackend-production-872b.up.railway.app';
+const API_URL = import.meta.env.API_URL;
 
 const Upload = () => {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
